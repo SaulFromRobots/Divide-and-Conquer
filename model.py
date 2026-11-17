@@ -36,8 +36,13 @@ class Model:
 		cursor.execute("DELETE FROM Sessions WHERE LastUsed < NOW() - INTERVAL %s MINUTE", (SESSION_EXPIRE_MINUTES,))
 		cursor.execute("SELECT UserID FROM Sessions WHERE Token = %s", (token,))
 		user = cursor.fetchone()
+		if user is None:
+			resp = ("Invalid or expired user token", False)
+		else:
+			resp = (user[0], True)
+			cursor.execute("UPDATE Sessions SET LastUsed = NOW() WHERE token = %s", (token,))
 		self.cxn.commit()
-		return (user[0], True) if user is not None else ("No valid unexpired user token", False) 
+		return resp
 
 	def users_new(self, username, email):
 		alphabet = string.ascii_letters + string.digits
