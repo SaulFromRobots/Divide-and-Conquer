@@ -16,6 +16,7 @@ class Model:
 	cxn = None
 
 	def __init__(self):
+		# Create a connection using DB info in the auth.json file
 		with open("auth.json", "r") as authfile:
 			auth = json.load(authfile)
 			self.cxn = connector.connect(
@@ -25,24 +26,32 @@ class Model:
 				database=auth["database"]
 			)
 
+		# Make sure that the database is using the correct schema version
 		cursor = self.cxn.cursor()
 		cursor.execute("SELECT * FROM InstanceGlobals")
 		assert cursor.fetchall()[0][0] == SCHEMA_VERSION, "Incorrect schema version"
 
+	# If the token passed to the function is non-stale and exists, return the user ID associated with it. Otherwise return an error message.
 	def user_of_token(self, token):
 		self.cxn.ping(reconnect=True)
 		cursor = self.cxn.cursor()
 
+		# Clear stale sessions
 		cursor.execute("DELETE FROM Sessions WHERE LastUsed < NOW() - INTERVAL %s MINUTE", (SESSION_EXPIRE_MINUTES,))
+
+		# Find the user ID
 		cursor.execute("SELECT UserID FROM Sessions WHERE Token = %s", (token,))
 		user = cursor.fetchone()
 		if user is None:
 			resp = ("Invalid or expired user token", False)
 		else:
 			resp = (user[0], True)
+			# If the session exists, extend the timeout
 			cursor.execute("UPDATE Sessions SET LastUsed = NOW() WHERE token = %s", (token,))
 		self.cxn.commit()
 		return resp
+
+	# All further functions perform actions corresponding to API endpoints
 
 	def users_new(self, username, email):
 		alphabet = string.ascii_letters + string.digits
