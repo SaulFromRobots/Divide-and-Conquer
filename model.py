@@ -10,6 +10,7 @@ from mysql.connector.errors import *
 import util
 
 SCHEMA_VERSION = 1
+SESSION_EXPIRE_MINUTES = 30
 
 class Model:
 	cxn = None
@@ -28,6 +29,16 @@ class Model:
 		cursor.execute("SELECT * FROM InstanceGlobals")
 		assert cursor.fetchall()[0][0] == SCHEMA_VERSION, "Incorrect schema version"
 
+	def user_of_token(self, token):
+		self.cxn.ping(reconnect=True)
+		cursor = self.cxn.cursor()
+
+		cursor.execute("DELETE FROM Sessions WHERE LastUsed < NOW() - INTERVAL %s MINUTE", (SESSION_EXPIRE_MINUTES,))
+		cursor.execute("SELECT UserID FROM Sessions WHERE Token = %s", (token,))
+		user = cursor.fetchone()
+		self.cxn.commit()
+		return (user[0], True) if user is not None else ("No valid unexpired user token", False) 
+
 	def users_new(self, username, email):
 		alphabet = string.ascii_letters + string.digits
 		password = ''.join(secrets.choice(alphabet) for i in range(20))
@@ -42,5 +53,41 @@ class Model:
 
 		except IntegrityError:
 			return "Username already in use", 400
+
+	def user_login(self, username, password):
+		self.cxn.ping(reconnect=True)
+		cursor = self.cxn.cursor()
+
+		cursor.execute("SELECT HashedPass, ID FROM Users WHERE Name = %s", (username,))
+		try:
+			[hashed_pass,user_id] = cursor.fetchall()[0]
+			assert hashed_pass == util.hash(password)
+		except:
+			return "Bad username/password combination", 401
+
+		token = secrets.token_urlsafe(192)
+
+		cursor.execute("INSERT INTO Sessions (UserID, Token, LastUsed) VALUES (%s, %s, NOW())", (user_id, token))
+		self.cxn.commit()
+		return token, 200
+
+	def user_changeColor(self, color, user_id):
+		self.cxn.ping(reconnect=True)
+		cursor = self.cxn.cursor()
+
+		if all(c in string.hexdigits for c in color):
+			cursor.execute("UPDATE Users SET Color = %s WHERE ID = %s", (color, user_id))
+			self.cxn.commit()
+			return color, 200
+		else:
+			return "Invalid color value "+color, 400
+
+	def user_logOut(self, token):
+		self.cxn.ping(reconnect=True)
+		cursor = self.cxn.cursor()
+
+		cursor.execute("DELETE FROM Sessions WHERE Token = %s", (token,))
+		self.cxn.commit()
+		return "Goodbye", 200
 
 M = Model()

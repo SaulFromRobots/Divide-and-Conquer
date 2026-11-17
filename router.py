@@ -19,6 +19,24 @@ def ensure_args(keys): # recieve keys
 		return wrapper
 	return decorator
 
+@app.route("/user/login", methods=["POST"])
+@ensure_args(["username","password"])
+def user_login():
+	return M.user_login(request.form["username"], request.form["password"])
+
+@app.route("/user/changeColor", methods=["POST"])
+@ensure_args(["color","token"])
+def user_changeColor():
+	value, worked = M.user_of_token(request.form["token"])
+	return M.user_changeColor(request.form["color"], value) if worked else (value, 401)
+
+@app.route("/user/logOut", methods=["POST"])
+@ensure_args(["token"])
+def user_logOut():
+	token = request.form["token"]
+	value, worked = M.user_of_token(token)
+	return M.user_logOut(token) if worked else (value, 401)
+
 @app.route("/users/new", methods=["POST"])
 @ensure_args(["username","email"])
 def users_new():

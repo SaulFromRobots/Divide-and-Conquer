@@ -7,7 +7,7 @@
 		devShells.x86_64-linux.default = with pkgs; mkShell {
 			nativeBuildInputs = [
 				(python3.withPackages (py: with py; [ flask mysql-connector-python ipython pip ]))
-				mysql-workbench
+				dbeaver-bin
 			];
 		};
 	};
