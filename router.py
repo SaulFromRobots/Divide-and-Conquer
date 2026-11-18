@@ -1,9 +1,8 @@
 # flask --app router run
-# curl -X POST http://127.0.0.1:5000/users/new -d "username=saul&email=saul.statman@sjsu.edu"
 
 from functools import wraps
 
-from flask import Flask, request
+from flask import Flask, make_response, render_template, request, redirect
 
 from model import M
 
@@ -19,23 +18,39 @@ def ensure_args(keys): # recieve keys
 		return wrapper
 	return decorator
 
+@app.route('/')
+def home():
+	id, logged_in = M.user_of_token(request.cookies.get("token"))
+	return render_template("beta.html", logged_in = logged_in, user_id = id)
+
 @app.route("/user/login", methods=["POST"])
 @ensure_args(["username","password"])
 def user_login():
-	return M.user_login(request.form["username"], request.form["password"])
+	value, code = M.user_login(request.form["username"], request.form["password"])
+	if code != 200:
+		return value, code
+	else:
+		resp = make_response(redirect("/"))
+		resp.set_cookie("token", value)
+		return resp
 
 @app.route("/user/changeColor", methods=["POST"])
-@ensure_args(["color","token"])
+@ensure_args(["color"])
 def user_changeColor():
-	value, worked = M.user_of_token(request.form["token"])
+	token = request.cookies.get("token")
+	value, worked = M.user_of_token(token)
 	return M.user_changeColor(request.form["color"], value) if worked else (value, 401)
 
 @app.route("/user/logOut", methods=["POST"])
-@ensure_args(["token"])
 def user_logOut():
-	token = request.form["token"]
+	token = request.cookies.get("token")
 	value, worked = M.user_of_token(token)
-	return M.user_logOut(token) if worked else (value, 401)
+	if not worked:
+		return value, 401
+	else:
+		resp = make_response(M.user_logOut(token))
+		resp.delete_cookie("token")
+		return resp
 
 @app.route("/users/new", methods=["POST"])
 @ensure_args(["username","email"])

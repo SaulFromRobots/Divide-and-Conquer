@@ -53,21 +53,6 @@ class Model:
 
 	# All further functions perform actions corresponding to API endpoints
 
-	def users_new(self, username, email):
-		alphabet = string.ascii_letters + string.digits
-		password = ''.join(secrets.choice(alphabet) for i in range(20))
-		hashed_password = util.hash(password)
-
-		self.cxn.ping(reconnect=True)
-		cursor = self.cxn.cursor()
-		try:
-			cursor.execute("INSERT INTO Users (Name, Email, HashedPass, Color) VALUES (%s, %s, %s, %s)", (username, email, hashed_password, "%06x" % randrange(16**6)))
-			self.cxn.commit()
-			return password, 200
-
-		except IntegrityError:
-			return "Username already in use", 400
-
 	def user_login(self, username, password):
 		self.cxn.ping(reconnect=True)
 		cursor = self.cxn.cursor()
@@ -86,6 +71,7 @@ class Model:
 		return token, 200
 
 	def user_changeColor(self, color, user_id):
+		color = color.removeprefix("#")
 		self.cxn.ping(reconnect=True)
 		cursor = self.cxn.cursor()
 
@@ -103,5 +89,20 @@ class Model:
 		cursor.execute("DELETE FROM Sessions WHERE Token = %s", (token,))
 		self.cxn.commit()
 		return "Goodbye", 200
+
+	def users_new(self, username, email):
+		alphabet = string.ascii_letters + string.digits
+		password = ''.join(secrets.choice(alphabet) for i in range(20))
+		hashed_password = util.hash(password)
+
+		self.cxn.ping(reconnect=True)
+		cursor = self.cxn.cursor()
+		try:
+			cursor.execute("INSERT INTO Users (Name, Email, HashedPass, Color) VALUES (%s, %s, %s, %s)", (username, email, hashed_password, "%06x" % randrange(16**6)))
+			self.cxn.commit()
+			return password, 200
+
+		except IntegrityError:
+			return "Username already in use", 400
 
 M = Model()
