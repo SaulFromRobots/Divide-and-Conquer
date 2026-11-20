@@ -29,7 +29,8 @@ class Model:
 		# Make sure that the database is using the correct schema version
 		cursor = self.cxn.cursor()
 		cursor.execute("SELECT * FROM InstanceGlobals")
-		assert cursor.fetchall()[0][0] == SCHEMA_VERSION, "Incorrect schema version"
+		if (cursor.fetchall()[0][0] != SCHEMA_VERSION):
+			raise ValueError("Incorrect schema version")
 
 	# If the token passed to the function is non-stale and exists, return the user ID associated with it. Otherwise return an error message.
 	def user_of_token(self, token):
@@ -60,7 +61,8 @@ class Model:
 		cursor.execute("SELECT HashedPass, ID FROM Users WHERE Name = %s", (username,))
 		try:
 			[hashed_pass,user_id] = cursor.fetchall()[0]
-			assert hashed_pass == util.hash(password)
+			if (hashed_pass != util.hash(password)):
+				raise ValueError
 		except:
 			return "Bad username/password combination", 401
 
