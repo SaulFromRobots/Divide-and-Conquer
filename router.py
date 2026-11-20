@@ -31,7 +31,7 @@ def user_login():
 		return value, code
 	else:
 		resp = make_response(redirect("/"))
-		resp.set_cookie("token", value)
+		resp.set_cookie("token", value, secure=True, httponly=True, max_age=60*60, samesite="strict")
 		return resp
 
 @app.route("/user/changeColor", methods=["POST"])
