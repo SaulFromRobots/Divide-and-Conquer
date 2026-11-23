@@ -44,7 +44,8 @@ def user_login(username, password):
 	cursor.execute("SELECT HashedPass, ID FROM Users WHERE Name = %s", (username,))
 	try:
 		[hashed_pass,user_id] = cursor.fetchall()[0]
-		assert hashed_pass == util.hash(password)
+		if hashed_pass != util.hash(password):
+			raise ValueError
 	except:
 		return "Bad username/password combination", 401
 
