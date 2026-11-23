@@ -1,0 +1,6 @@
+{
+  "host": "localhost",
+  "user": "dac",
+  "password": "your-mysql-password",
+  "database": "dac_dev"
+}
