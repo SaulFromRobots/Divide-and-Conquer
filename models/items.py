@@ -1,3 +1,5 @@
+from enum import Enum
+
 """Task (item) queries for routes/items.py.
 
 Stubs for now: the real code comes in Phase 3, after schema version 2,
@@ -11,8 +13,7 @@ Every function takes the list's ID too, so nobody can reach another list's
 task by changing the URL.
 """
 
-STATES = ("No progress", "In progress", "Done")
-
+STATES = Enum("State", [("NoProgress", 1), ("InProgress", 2), ("Done", 3)])
 
 def items_of_list(list_id):
 	"""Return every task in a list, sorted by OrderPlacement.
