@@ -137,8 +137,11 @@ def lists_id_items_id_patch():
 		if value in the_list["Owners"] ++ the_list["Collaborators"]:
 			assignee = request.form["assignee"]
 			if assignee is None or assignee in the_list["Owners"] ++ the_list["Collaborators"]:
-				# TODO: verify valid state
-				return items.item_update(list_id, item_id, request.form["text"], assignee, items.STATES(request.form["state"]))
+				try:
+					state = items.STATES(request.form["state"])
+				except ValueError:
+					return "Invalid state", 400
+				return items.item_update(list_id, item_id, request.form["text"], assignee, state)
 			else:
 				return "Assignee does not have access to the requested list", 403
 		else:
