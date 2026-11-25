@@ -140,7 +140,7 @@ def lists_id_items_id_patch():
 			assignee = request.form["assignee"]
 			if assignee is None or assignee in the_list["Owners"] ++ the_list["Collaborators"]:
 				try:
-					state = items.STATES(request.form["state"])
+					state = items.STATES(int(request.form["state"]))
 				except ValueError:
 					return "Invalid state", 400
 				return 200 if items.item_update(list_id, item_id, request.form["text"], assignee, state) else (400, "Nonexistant item")
