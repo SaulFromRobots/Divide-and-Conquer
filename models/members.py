@@ -1,3 +1,5 @@
+from enum import Enum
+
 """List member queries for routes/members.py and the access checks.
 
 Stubs for now: the real code comes in Phase 3, after schema version 2,
@@ -9,8 +11,7 @@ words as the MembershipChanges table in our spec. A list always keeps at
 least one owner.
 """
 
-ROLES = ("Owner", "Colab")
-
+ROLES = Enum("Role", [("Owner",1), ("Colab",2)])
 
 def member_role(list_id, user_id):
 	"""Return the user's role in a list: "Owner", "Colab", or None.
