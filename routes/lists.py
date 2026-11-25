@@ -125,7 +125,7 @@ def lists_id_items_id():
 			return "User does not have access to the requested list", 403
 
 @bp.route("/<int:list_id>/items/<int:item_id>", methods=["PATCH"])
-@ensure_args(["text","assignee","state"])
+@ensure_args(["text","assignee","state"]) # TODO: client does not need to send all values. check each and only operate on ones that are sent.
 def lists_id_items_id_patch():
 	token = request.cookies.get("token")
 	value, worked = users.user_of_token(token)
