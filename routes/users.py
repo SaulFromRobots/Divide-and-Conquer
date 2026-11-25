@@ -1,21 +1,11 @@
 """The /user/... and /users/... routes, moved from router.py without changing behavior."""
-from functools import wraps
 
+from __init__ import ensure_args
 from flask import Blueprint, make_response, redirect, request
 
 from models import users
 
 bp = Blueprint("users", __name__)
-
-def ensure_args(keys): # recieve keys
-	def decorator(func): # recieve function
-		@wraps(func)
-		def wrapper(*args, **kwargs): # wrapper function that runs
-			missing = set(keys) - set(request.form)
-			if not missing: return func(*args, **kwargs)
-			return f"Required request arguments {', '.join(missing)} missing", 400
-		return wrapper
-	return decorator
 
 @bp.route("/user/login", methods=["POST"])
 @ensure_args(["username","password"])
