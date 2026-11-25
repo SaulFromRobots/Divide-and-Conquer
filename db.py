@@ -9,7 +9,7 @@ import mysql.connector
 from flask import current_app, g
 
 # The schema version this code expects. Raise it together with schema.sql.
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 
 def get_db():
