@@ -158,8 +158,7 @@ def lists_id_items_id_delete():
 	if not worked:
 		return value, 401
 	else:
-		# TODO: To delete a task, the user must be an owner, or the collaborator who is the task's Assignee (from item_get).
-		if value in the_list["Owners"] ++ the_list["Collaborators"]:
+		if value in the_list["Owners"] or value == items.item_get(list_id, item_id)["Assignee"]:
 			return items.item_delete(list_id, item_id)
 		else:
 			return "User does not have access to the requested list", 403
