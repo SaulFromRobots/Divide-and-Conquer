@@ -64,10 +64,14 @@ def query(app):
 	"""Run SQL directly on dac_test, to set up or check data."""
 	def run(sql, params=()):
 		cxn = mysql.connector.connect(**app.config["DATABASE"])
-		cursor = cxn.cursor()
-		cursor.execute(sql, params)
-		rows = cursor.fetchall() if cursor.with_rows else None
-		cxn.commit()
-		cxn.close()
-		return rows
+		try:
+			cursor = cxn.cursor()
+			cursor.execute(sql, params)
+			rows = cursor.fetchall() if cursor.with_rows else None
+			cxn.commit()
+			return rows
+		finally:
+			# Close even when the SQL fails. An open connection keeps its
+			# locks, and the next test then waits forever to drop dac_test.
+			cxn.close()
 	return run
