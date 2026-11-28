@@ -1,20 +1,21 @@
-from enum import Enum
-
 """List member queries for routes/members.py and the access checks.
 
 Stubs for now: the real code comes in Phase 3, after schema version 2,
 and the names and inputs below won't change. Every function returns plain
 Python data, and the route decides the HTTP status code.
 
-A member has one of two roles, "Owner" or "Colab" (collaborator), the same
-words as the MembershipChanges table in our spec. A list always keeps at
-least one owner.
+A member has one of two roles, ROLES.Owner or ROLES.Colab (collaborator).
+The functions take and return these ROLES members, not the words. In the
+database, the role is the Role column of ListMembers. A list always keeps
+at least one owner.
 """
+from enum import Enum
 
+# The numbers match the order of the Role enum in schema.sql.
 ROLES = Enum("Role", [("Owner",1), ("Colab",2)])
 
 def member_role(list_id, user_id):
-	"""Return the user's role in a list: "Owner", "Colab", or None.
+	"""Return the user's role in a list: ROLES.Owner, ROLES.Colab, or None.
 
 	None means the user is not a member, or there is no such list. Every list
 	route checks this first (directly, or through the list-member check in
@@ -32,9 +33,10 @@ def members_of_list(list_id):
 	raise NotImplementedError
 
 
-def member_add(list_id, username, role="Colab"):
+def member_add(list_id, username, role=ROLES.Colab):
 	"""Add a user to a list, by username, with the given role.
 
+	role is a ROLES member, and the default is ROLES.Colab.
 	Returns "added", "no_such_user", or "already_member". An existing
 	member's role doesn't change here; use member_set_role for that.
 	"""
@@ -42,7 +44,7 @@ def member_add(list_id, username, role="Colab"):
 
 
 def member_set_role(list_id, username, role):
-	"""Change a member's role to "Owner" or "Colab".
+	"""Change a member's role to ROLES.Owner or ROLES.Colab.
 
 	Returns "changed", "no_such_user", "not_member", or "last_owner". With
 	"last_owner", nothing changed, because the list would have no owner left.
