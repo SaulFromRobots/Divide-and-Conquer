@@ -9,8 +9,8 @@ import string
 from random import randrange
 
 from mysql.connector.errors import IntegrityError
+from werkzeug.security import check_password_hash, generate_password_hash
 
-import util
 from db import get_db
 
 SESSION_EXPIRE_MINUTES = 30
@@ -44,7 +44,7 @@ def user_login(username, password):
 	cursor.execute("SELECT HashedPass, ID FROM Users WHERE Name = %s", (username,))
 	try:
 		[hashed_pass,user_id] = cursor.fetchall()[0]
-		if hashed_pass != util.hash(password):
+		if not check_password_hash(hashed_pass, password):
 			raise ValueError
 	except:
 		return "Bad username/password combination", 401
@@ -78,7 +78,7 @@ def user_logOut(token):
 def users_new(username, email):
 	alphabet = string.ascii_letters + string.digits
 	password = ''.join(secrets.choice(alphabet) for i in range(20))
-	hashed_password = util.hash(password)
+	hashed_password = generate_password_hash(password)
 
 	db = get_db()
 	cursor = db.cursor()
